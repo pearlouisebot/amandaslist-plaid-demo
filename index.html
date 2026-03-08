@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amanda's List — Sign Up</title>
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0a; color: #fff; min-height: 100vh;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 40px 24px; }
+  
+  /* Logo & Header */
+  .header { text-align: center; margin-bottom: 48px; }
+  .header h1 { 
+    font-size: 32px; font-weight: 700; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #c9a55a, #f0d68a, #c9a55a);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header p { color: #888; font-size: 14px; margin-top: 8px; letter-spacing: 2px; text-transform: uppercase; }
+  
+  /* Steps */
+  .step { display: none; animation: fadeIn 0.4s ease; }
+  .step.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .step-indicator { 
+    display: flex; justify-content: center; gap: 8px; margin-bottom: 32px; 
+  }
+  .step-dot { 
+    width: 8px; height: 8px; border-radius: 50%; background: #333; transition: all 0.3s;
+  }
+  .step-dot.active { background: #c9a55a; width: 24px; border-radius: 4px; }
+  .step-dot.done { background: #c9a55a; }
+  
+  /* Form Elements */
+  h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+  .subtitle { color: #888; font-size: 14px; margin-bottom: 32px; line-height: 1.5; }
+  
+  label { display: block; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  input, select { 
+    width: 100%; padding: 14px 16px; background: #1a1a1a; border: 1px solid #333;
+    border-radius: 8px; color: #fff; font-size: 16px; margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { outline: none; border-color: #c9a55a; }
+  input::placeholder { color: #555; }
+  select { appearance: none; cursor: pointer; }
+  
+  .btn { 
+    width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 16px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px;
+  }
+  .btn-primary { 
+    background: linear-gradient(135deg, #c9a55a, #dbb86a); color: #0a0a0a;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(201,165,90,0.3); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  
+  .btn-secondary { 
+    background: #1a1a1a; color: #c9a55a; border: 1px solid #333;
+  }
+  .btn-secondary:hover { border-color: #c9a55a; }
+  
+  /* Plaid Connect */
+  .plaid-section {
+    background: #111; border: 1px solid #222; border-radius: 12px; padding: 32px 24px;
+    text-align: center; margin-bottom: 24px;
+  }
+  .plaid-icon { font-size: 48px; margin-bottom: 16px; }
+  .plaid-section h3 { font-size: 18px; margin-bottom: 8px; }
+  .plaid-section p { color: #888; font-size: 13px; line-height: 1.5; margin-bottom: 24px; }
+  
+  .secure-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #1a2a1a; color: #4ade80; font-size: 12px; padding: 6px 12px;
+    border-radius: 20px; margin-top: 16px;
+  }
+  
+  /* Results */
+  .results-card {
+    background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px;
+    margin-bottom: 16px;
+  }
+  .results-card h3 { font-size: 14px; color: #c9a55a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  
+  .account-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid #1a1a1a;
+  }
+  .account-row:last-child { border-bottom: none; }
+  .account-name { font-size: 14px; }
+  .account-type { color: #888; font-size: 12px; }
+  .account-balance { font-size: 16px; font-weight: 600; color: #c9a55a; }
+  
+  .txn-row {
+    display: flex; justify-content: space-between; padding: 10px 0;
+    border-bottom: 1px solid #1a1a1a; font-size: 13px;
+  }
+  .txn-row:last-child { border-bottom: none; }
+  .txn-name { flex: 1; }
+  .txn-category { color: #888; font-size: 11px; }
+  .txn-amount { font-weight: 600; min-width: 80px; text-align: right; }
+  .txn-amount.negative { color: #ef4444; }
+  .txn-amount.positive { color: #4ade80; }
+  
+  .insight-box {
+    background: linear-gradient(135deg, #1a1510, #1a1a1a); 
+    border: 1px solid #333; border-radius: 12px; padding: 20px; margin-bottom: 16px;
+  }
+  .insight-box h3 { font-size: 14px; color: #c9a55a; margin-bottom: 12px; }
+  .insight-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+  .insight-label { color: #888; }
+  .insight-value { font-weight: 600; }
+  
+  .loading { text-align: center; padding: 40px; }
+  .spinner { 
+    width: 40px; height: 40px; border: 3px solid #333; border-top-color: #c9a55a;
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  
+  .gender-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .gender-option {
+    padding: 14px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px;
+    text-align: center; cursor: pointer; transition: all 0.2s; font-size: 14px;
+  }
+  .gender-option:hover { border-color: #c9a55a; }
+  .gender-option.selected { border-color: #c9a55a; background: #1a1510; color: #c9a55a; }
+  
+  .looking-for { margin-bottom: 20px; }
+  .looking-option {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    background: #1a1a1a; border: 1px solid #333; border-radius: 8px;
+    margin-bottom: 8px; cursor: pointer; transition: all 0.2s; font-size: 14px;
+  }
+  .looking-option:hover { border-color: #c9a55a; }
+  .looking-option.selected { border-color: #c9a55a; background: #1a1510; }
+  .looking-check { 
+    width: 20px; height: 20px; border-radius: 50%; border: 2px solid #333;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .looking-option.selected .looking-check { border-color: #c9a55a; background: #c9a55a; }
+  .looking-option.selected .looking-check::after { content: '✓'; color: #0a0a0a; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Amanda's List</h1>
+    <p>Where ambition meets its match</p>
+  </div>
+  
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot-1"></div>
+    <div class="step-dot" id="dot-2"></div>
+    <div class="step-dot" id="dot-3"></div>
+    <div class="step-dot" id="dot-4"></div>
+  </div>
+
+  <!-- STEP 1: Basic Info -->
+  <div class="step active" id="step-1">
+    <h2>Let's get started</h2>
+    <p class="subtitle">Join the most ambitious dating community in the world.</p>
+    
+    <label>First Name</label>
+    <input type="text" id="firstName" placeholder="Amanda">
+    
+    <label>Email</label>
+    <input type="email" id="email" placeholder="you@example.com">
+    
+    <label>City</label>
+    <input type="text" id="city" placeholder="Austin, TX">
+    
+    <label>Age</label>
+    <input type="number" id="age" placeholder="34" min="18" max="99">
+    
+    <button class="btn btn-primary" onclick="goToStep(2)">Continue</button>
+  </div>
+
+  <!-- STEP 2: Dating Profile -->
+  <div class="step" id="step-2">
+    <h2>About you</h2>
+    <p class="subtitle">We use this to find your most compatible matches.</p>
+    
+    <label>I am</label>
+    <div class="gender-grid">
+      <div class="gender-option" onclick="selectGender(this, 'woman')">Woman</div>
+      <div class="gender-option" onclick="selectGender(this, 'man')">Man</div>
+      <div class="gender-option" onclick="selectGender(this, 'nonbinary')">Non-binary</div>
+      <div class="gender-option" onclick="selectGender(this, 'other')">Other</div>
+    </div>
+    
+    <label>Looking for</label>
+    <div class="looking-for">
+      <div class="looking-option" onclick="toggleLooking(this, 'relationship')">
+        <div class="looking-check"></div>
+        <span>Serious relationship</span>
+      </div>
+      <div class="looking-option" onclick="toggleLooking(this, 'casual')">
+        <div class="looking-check"></div>
+        <span>Something casual</span>
+      </div>
+      <div class="looking-option" onclick="toggleLooking(this, 'friends')">
+        <div class="looking-check"></div>
+        <span>New friends</span>
+      </div>
+      <div class="looking-option" onclick="toggleLooking(this, 'unsure')">
+        <div class="looking-check"></div>
+        <span>Not sure yet</span>
+      </div>
+    </div>
+    
+    <label>What do you do?</label>
+    <input type="text" id="occupation" placeholder="Founder, Engineer, Designer...">
+    
+    <button class="btn btn-primary" onclick="goToStep(3)">Continue</button>
+    <button class="btn btn-secondary" onclick="goToStep(1)" style="margin-top:8px">Back</button>
+  </div>
+
+  <!-- STEP 3: Plaid Connect -->
+  <div class="step" id="step-3">
+    <h2>Verify your finances</h2>
+    <p class="subtitle">Amanda's List uses financial data to build deeper compatibility — not to judge your income, but to understand your financial personality.</p>
+    
+    <div class="plaid-section">
+      <div class="plaid-icon">🏦</div>
+      <h3>Connect your bank</h3>
+      <p>We analyze spending patterns to understand your lifestyle, values, and financial personality — things like how you spend on experiences vs. things, your saving habits, and what you prioritize.</p>
+      <button class="btn btn-primary" id="plaid-btn" onclick="openPlaid()">Connect with Plaid</button>
+      <div class="secure-badge">🔒 Bank-level encryption · Read-only access</div>
+    </div>
+    
+    <p style="color:#555; font-size:12px; text-align:center; line-height:1.5;">
+      We never see your login credentials. Plaid connects directly to your bank with 256-bit encryption. 
+      We only read transactions — we can never move money.
+    </p>
+  </div>
+
+  <!-- STEP 4: Results -->
+  <div class="step" id="step-4">
+    <div id="loading-state" class="loading">
+      <div class="spinner"></div>
+      <p>Analyzing your financial personality...</p>
+    </div>
+    
+    <div id="results-state" style="display:none;">
+      <h2>Your Financial Profile</h2>
+      <p class="subtitle">Here's what we learned — this is what powers your compatibility matching.</p>
+      
+      <div class="insight-box">
+        <h3>💰 Financial Snapshot</h3>
+        <div id="snapshot-rows"></div>
+      </div>
+      
+      <div class="results-card">
+        <h3>🏦 Connected Accounts</h3>
+        <div id="accounts-list"></div>
+      </div>
+      
+      <div class="results-card">
+        <h3>💳 Recent Transactions</h3>
+        <div id="transactions-list"></div>
+      </div>
+      
+      <div class="insight-box" style="margin-top:24px;">
+        <h3>🧠 Financial Personality Preview</h3>
+        <div id="personality-preview"></div>
+      </div>
+      
+      <button class="btn btn-primary" style="margin-top:24px;" onclick="alert('🎉 Profile complete! In the full app, you\'d now enter the matching pool.')">Complete Profile →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+let userProfile = {};
+const API_BASE = 'https://oculus130123.tail745e9b.ts.net/plaid-api';
+let plaidHandler = null;
+
+function goToStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById(`step-${n}`).classList.add('active');
+  document.querySelectorAll('.step-dot').forEach((d, i) => {
+    d.classList.remove('active');
+    d.classList.toggle('done', i + 1 < n);
+    if (i + 1 === n) d.classList.add('active');
+  });
+  currentStep = n;
+  
+  if (n === 3 && !plaidHandler) initPlaid();
+}
+
+function selectGender(el, value) {
+  document.querySelectorAll('.gender-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  userProfile.gender = value;
+}
+
+function toggleLooking(el, value) {
+  el.classList.toggle('selected');
+  if (!userProfile.lookingFor) userProfile.lookingFor = [];
+  const idx = userProfile.lookingFor.indexOf(value);
+  if (idx >= 0) userProfile.lookingFor.splice(idx, 1);
+  else userProfile.lookingFor.push(value);
+}
+
+async function initPlaid() {
+  const res = await fetch(API_BASE + '/api/create-link-token', { method: 'POST' });
+  const data = await res.json();
+  
+  if (data.link_token) {
+    plaidHandler = Plaid.create({
+      token: data.link_token,
+      onSuccess: async (public_token, metadata) => {
+        goToStep(4);
+        await processPlaidData(public_token);
+      },
+      onExit: (err, metadata) => {
+        if (err) console.log('Plaid exit error:', err);
+      }
+    });
+  }
+}
+
+function openPlaid() {
+  if (plaidHandler) plaidHandler.open();
+  else {
+    document.getElementById('plaid-btn').textContent = 'Loading...';
+    initPlaid().then(() => setTimeout(() => plaidHandler && plaidHandler.open(), 500));
+  }
+}
+
+async function processPlaidData(publicToken) {
+  const res = await fetch(API_BASE + '/api/exchange-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ public_token: publicToken })
+  });
+  const data = await res.json();
+  
+  // Build accounts list
+  const accountsHtml = (data.accounts || []).map(a => `
+    <div class="account-row">
+      <div>
+        <div class="account-name">${a.name}</div>
+        <div class="account-type">${a.subtype || a.type}</div>
+      </div>
+      <div class="account-balance">$${(a.balances.current || 0).toLocaleString()}</div>
+    </div>
+  `).join('');
+  document.getElementById('accounts-list').innerHTML = accountsHtml;
+  
+  // Build transactions list
+  const txns = (data.transactions || []).slice(0, 15);
+  const txnHtml = txns.map(t => {
+    const isNeg = t.amount > 0;
+    return `
+      <div class="txn-row">
+        <div>
+          <div class="txn-name">${t.name}</div>
+          <div class="txn-category">${(t.category || []).join(' · ') || t.date}</div>
+        </div>
+        <div class="txn-amount ${isNeg ? 'negative' : 'positive'}">
+          ${isNeg ? '-' : '+'}$${Math.abs(t.amount).toFixed(2)}
+        </div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('transactions-list').innerHTML = txnHtml || '<p style="color:#888;font-size:13px;">No transactions in sandbox period</p>';
+  
+  // Calculate insights
+  const totalBalance = (data.accounts || []).reduce((sum, a) => sum + (a.balances.current || 0), 0);
+  const checkingAccts = (data.accounts || []).filter(a => a.subtype === 'checking');
+  const savingsAccts = (data.accounts || []).filter(a => a.subtype === 'savings');
+  const totalSpend = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  
+  // Spending categories
+  const categories = {};
+  txns.filter(t => t.amount > 0).forEach(t => {
+    const cat = (t.category || ['Other'])[0];
+    categories[cat] = (categories[cat] || 0) + t.amount;
+  });
+  const topCats = Object.entries(categories).sort((a,b) => b[1] - a[1]).slice(0, 3);
+  
+  const snapshotHtml = `
+    <div class="insight-row"><span class="insight-label">Total Balance</span><span class="insight-value">$${totalBalance.toLocaleString()}</span></div>
+    <div class="insight-row"><span class="insight-label">Checking Accounts</span><span class="insight-value">${checkingAccts.length}</span></div>
+    <div class="insight-row"><span class="insight-label">Savings Accounts</span><span class="insight-value">${savingsAccts.length}</span></div>
+    <div class="insight-row"><span class="insight-label">Recent Spending (30d)</span><span class="insight-value">$${totalSpend.toFixed(0)}</span></div>
+    <div class="insight-row"><span class="insight-label">Transactions</span><span class="insight-value">${data.total_transactions || txns.length}</span></div>
+  `;
+  document.getElementById('snapshot-rows').innerHTML = snapshotHtml;
+  
+  // Financial personality
+  const savingsRatio = savingsAccts.reduce((s,a) => s + (a.balances.current||0), 0) / Math.max(totalBalance, 1);
+  const experienceSpend = txns.filter(t => {
+    const cats = (t.category || []).join(' ').toLowerCase();
+    return cats.includes('travel') || cats.includes('food') || cats.includes('recreation') || cats.includes('entertainment');
+  }).reduce((s,t) => s + Math.abs(t.amount), 0);
+  const experienceRatio = experienceSpend / Math.max(totalSpend, 1);
+  
+  let personality = '';
+  if (savingsRatio > 0.4) personality += '<div class="insight-row"><span class="insight-label">Money Style</span><span class="insight-value">🏔️ Builder</span></div>';
+  else if (savingsRatio > 0.15) personality += '<div class="insight-row"><span class="insight-label">Money Style</span><span class="insight-value">⚖️ Balanced</span></div>';
+  else personality += '<div class="insight-row"><span class="insight-label">Money Style</span><span class="insight-value">🎯 Optimizer</span></div>';
+  
+  if (experienceRatio > 0.4) personality += '<div class="insight-row"><span class="insight-label">Spending Vibe</span><span class="insight-value">🌎 Experience Seeker</span></div>';
+  else personality += '<div class="insight-row"><span class="insight-label">Spending Vibe</span><span class="insight-value">🏠 Nester</span></div>';
+  
+  if (topCats.length > 0) {
+    personality += '<div class="insight-row"><span class="insight-label">Top Category</span><span class="insight-value">' + topCats[0][0] + '</span></div>';
+  }
+  
+  personality += '<div style="margin-top:16px;color:#888;font-size:12px;line-height:1.5;">This is a preview. The full financial personality assessment combines Plaid behavioral data with our Money Scripts compatibility quiz to create your Financial DNA — the foundation of deeper matching.</div>';
+  
+  document.getElementById('personality-preview').innerHTML = personality;
+  
+  // Show results
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('results-state').style.display = 'block';
+}
+</script>
+</body>
+</html>
