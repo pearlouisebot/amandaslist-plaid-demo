@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Amanda's List — Onboarding</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; overflow-x: hidden; }
+  
+  .screen { display: none; flex-direction: column; min-height: 100vh; padding: 60px 24px 40px; position: relative; }
+  .screen.active { display: flex; }
+  
+  /* Progress bar */
+  .progress { position: fixed; top: 0; left: 0; right: 0; height: 4px; background: #1a1a1a; z-index: 100; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #c8a2f8, #f8a2c8); transition: width 0.4s ease; border-radius: 0 2px 2px 0; }
+  
+  /* Back arrow */
+  .back { position: fixed; top: 16px; left: 16px; font-size: 24px; color: #888; cursor: pointer; z-index: 101; background: none; border: none; }
+  .back:hover { color: #fff; }
+  
+  /* Step counter */
+  .step-count { position: fixed; top: 18px; right: 20px; font-size: 13px; color: #555; z-index: 101; }
+  
+  /* Typography */
+  h1 { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 8px; }
+  h2 { font-size: 22px; font-weight: 600; line-height: 1.3; margin-bottom: 6px; }
+  .subtitle { font-size: 15px; color: #888; line-height: 1.5; margin-bottom: 32px; }
+  
+  /* Inputs */
+  .input-group { margin-bottom: 20px; }
+  .input-group label { font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
+  .input-group input, .input-group select { width: 100%; padding: 16px; font-size: 17px; background: #1a1a1a; border: 1px solid #333; border-radius: 12px; color: #fff; outline: none; -webkit-appearance: none; }
+  .input-group input:focus { border-color: #c8a2f8; }
+  .input-group input::placeholder { color: #444; }
+  
+  /* Buttons */
+  .btn-primary { width: 100%; padding: 18px; font-size: 17px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; background: linear-gradient(135deg, #c8a2f8, #f8a2c8); color: #000; margin-top: auto; transition: transform 0.15s, opacity 0.15s; }
+  .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+  .btn-secondary { width: 100%; padding: 18px; font-size: 17px; font-weight: 600; border: 1px solid #333; border-radius: 14px; cursor: pointer; background: transparent; color: #fff; margin-top: 12px; }
+  .btn-skip { background: none; border: none; color: #555; font-size: 15px; cursor: pointer; margin-top: 16px; text-align: center; width: 100%; padding: 12px; }
+  
+  /* Quiz options */
+  .quiz-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; flex: 1; }
+  .quiz-option { padding: 18px 20px; background: #1a1a1a; border: 2px solid #222; border-radius: 14px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: flex; align-items: center; gap: 14px; }
+  .quiz-option:hover { border-color: #444; }
+  .quiz-option.selected { border-color: #c8a2f8; background: #1a1528; }
+  .quiz-option .emoji { font-size: 24px; }
+  .quiz-option .text { flex: 1; }
+  .quiz-option .text span { display: block; font-size: 13px; color: #666; margin-top: 4px; }
+  
+  /* Integration cards */
+  .integration-cards { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+  .int-card { padding: 20px; background: #1a1a1a; border: 2px solid #222; border-radius: 16px; cursor: pointer; display: flex; align-items: center; gap: 16px; transition: all 0.2s; }
+  .int-card:hover { border-color: #444; }
+  .int-card.connected { border-color: #4ade80; background: #0a1a0f; }
+  .int-card .icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .int-card .icon.plaid { background: #111; }
+  .int-card .icon.oura { background: #1a1a2e; }
+  .int-card .icon.whoop { background: #1a1a1a; }
+  .int-card .icon.apple { background: #1a1a1a; }
+  .int-card .info { flex: 1; }
+  .int-card .info h3 { font-size: 16px; font-weight: 600; margin-bottom: 3px; }
+  .int-card .info p { font-size: 13px; color: #666; }
+  .int-card .status { font-size: 13px; color: #4ade80; font-weight: 500; }
+  .int-card .arrow { color: #444; font-size: 18px; }
+  
+  /* Result card */
+  .result-card { background: linear-gradient(145deg, #1a1528, #0f1a28); border: 1px solid #2a2040; border-radius: 24px; padding: 32px 24px; text-align: center; margin-bottom: 24px; }
+  .result-card .archetype-emoji { font-size: 64px; margin-bottom: 16px; }
+  .result-card .archetype-name { font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #c8a2f8, #f8a2c8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+  .result-card .archetype-desc { font-size: 15px; color: #999; line-height: 1.6; }
+  .result-card .traits { display: flex; justify-content: center; gap: 16px; margin-top: 20px; }
+  .result-card .trait { text-align: center; }
+  .result-card .trait .val { font-size: 20px; font-weight: 700; color: #c8a2f8; }
+  .result-card .trait .lbl { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  
+  /* Profile completion */
+  .completion-ring { width: 120px; height: 120px; margin: 0 auto 20px; position: relative; }
+  .completion-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .completion-ring .bg { fill: none; stroke: #1a1a1a; stroke-width: 8; }
+  .completion-ring .fill { fill: none; stroke: url(#grad); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 339.292; transition: stroke-dashoffset 0.8s ease; }
+  .completion-ring .pct { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 28px; font-weight: 700; }
+  
+  /* Spacer */
+  .spacer { flex: 1; }
+  
+  /* Animate in */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .screen.active > * { animation: fadeUp 0.4s ease forwards; }
+  .screen.active > *:nth-child(2) { animation-delay: 0.05s; }
+  .screen.active > *:nth-child(3) { animation-delay: 0.1s; }
+  .screen.active > *:nth-child(4) { animation-delay: 0.15s; }
+  
+  /* Lock icon */
+  .lock-note { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; margin-top: 12px; justify-content: center; }
+  
+  /* Share button */
+  .btn-share { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #1a1a1a; border: 1px solid #333; border-radius: 12px; color: #fff; font-size: 14px; cursor: pointer; margin-top: 16px; }
+  
+  /* Tags for looking-for */
+  .tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+  .tag { padding: 12px 20px; background: #1a1a1a; border: 2px solid #222; border-radius: 100px; font-size: 15px; cursor: pointer; transition: all 0.2s; }
+  .tag.selected { border-color: #c8a2f8; background: #1a1528; }
+</style>
+</head>
+<body>
+
+<div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+<button class="back" id="backBtn" onclick="prevScreen()">←</button>
+<div class="step-count" id="stepCount"></div>
+
+<!-- SCREEN 1: Welcome / Phone -->
+<div class="screen active" id="s1">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <div style="text-align:center;margin-bottom:40px;">
+      <div style="font-size:48px;margin-bottom:16px;">✦</div>
+      <h1>Amanda's List</h1>
+      <p class="subtitle" style="margin-bottom:0;">The most ambitious community in the world.</p>
+    </div>
+    <div class="input-group">
+      <label>Phone number</label>
+      <input type="tel" placeholder="+1 (555) 000-0000" id="phoneInput">
+    </div>
+    <p style="font-size:13px;color:#444;margin-bottom:24px;">We'll send a verification code. Standard rates apply.</p>
+  </div>
+  <button class="btn-primary" onclick="nextScreen()">Continue</button>
+  <div class="lock-note">🔒 Your number is never shared</div>
+</div>
+
+<!-- SCREEN 2: Verify Code -->
+<div class="screen" id="s2">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <h1>Enter the code</h1>
+    <p class="subtitle">Sent to +1 (555) 000-0000</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:32px;">
+      <input style="width:52px;height:64px;text-align:center;font-size:24px;background:#1a1a1a;border:1px solid #333;border-radius:12px;color:#fff;" maxlength="1" value="4">
+      <input style="width:52px;height:64px;text-align:center;font-size:24px;background:#1a1a1a;border:1px solid #333;border-radius:12px;color:#fff;" maxlength="1" value="2">
+      <input style="width:52px;height:64px;text-align:center;font-size:24px;background:#1a1a1a;border:1px solid #333;border-radius:12px;color:#fff;" maxlength="1" value="0">
+      <input style="width:52px;height:64px;text-align:center;font-size:24px;background:#1a1a1a;border:1px solid #333;border-radius:12px;color:#fff;" maxlength="1" value="8">
+    </div>
+    <p style="font-size:14px;color:#555;text-align:center;">Didn't get it? <span style="color:#c8a2f8;cursor:pointer;">Resend</span></p>
+  </div>
+  <button class="btn-primary" onclick="nextScreen()">Verify</button>
+</div>
+
+<!-- SCREEN 3: Email + Name -->
+<div class="screen" id="s3">
+  <h1>A little about you</h1>
+  <p class="subtitle">This helps us personalize your experience.</p>
+  <div class="input-group">
+    <label>First name</label>
+    <input type="text" placeholder="Amanda" value="Amanda">
+  </div>
+  <div class="input-group">
+    <label>Email</label>
+    <input type="email" placeholder="you@email.com" value="amanda@hatchlabs.com">
+  </div>
+  <div class="input-group">
+    <label>City</label>
+    <input type="text" placeholder="Austin, TX" value="Austin, TX">
+  </div>
+  <div class="spacer"></div>
+  <button class="btn-primary" onclick="nextScreen()">Continue</button>
+</div>
+
+<!-- SCREEN 4: What are you looking for? -->
+<div class="screen" id="s4">
+  <h1>What interests you?</h1>
+  <p class="subtitle">Select all that apply. You can change these anytime.</p>
+  <div class="tags">
+    <div class="tag selected" onclick="this.classList.toggle('selected')">💼 Career connections</div>
+    <div class="tag" onclick="this.classList.toggle('selected')">❤️ Dating</div>
+    <div class="tag selected" onclick="this.classList.toggle('selected')">🤝 Co-founders</div>
+    <div class="tag" onclick="this.classList.toggle('selected')">💰 Investing</div>
+    <div class="tag" onclick="this.classList.toggle('selected')">🧠 Mentorship</div>
+    <div class="tag selected" onclick="this.classList.toggle('selected')">🌎 Community</div>
+    <div class="tag" onclick="this.classList.toggle('selected')">🏋️ Wellness</div>
+    <div class="tag" onclick="this.classList.toggle('selected')">📚 Book club</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn-primary" onclick="nextScreen()">Continue</button>
+</div>
+
+<!-- SCREEN 5: Quiz Q1 -->
+<div class="screen" id="s5">
+  <h2>Quick vibe check</h2>
+  <p class="subtitle">5 questions. No wrong answers. This shapes your profile.</p>
+  <div class="quiz-options">
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">🎯</div>
+      <div class="text">I track every dollar<span>Spreadsheets are my love language</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">🌊</div>
+      <div class="text">Money flows in and out<span>I trust it'll work out</span></div>
+    </div>
+    <div class="quiz-option selected" onclick="selectQuiz(this)">
+      <div class="emoji">⚡</div>
+      <div class="text">I spend on experiences<span>Life's too short to save everything</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">🏦</div>
+      <div class="text">Security first, always<span>I need 6+ months of runway at all times</span></div>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="nextScreen()">Next</button>
+</div>
+
+<!-- SCREEN 6: Quiz Q2 -->
+<div class="screen" id="s6">
+  <h2>On a first date, the bill comes...</h2>
+  <p class="subtitle">Question 2 of 5</p>
+  <div class="quiz-options">
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">💳</div>
+      <div class="text">I grab it immediately<span>Treating people is my thing</span></div>
+    </div>
+    <div class="quiz-option selected" onclick="selectQuiz(this)">
+      <div class="emoji">✂️</div>
+      <div class="text">Split it, obviously<span>Equality from day one</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">🤷</div>
+      <div class="text">Whoever invited should pay<span>Old school? Maybe. Fair? Definitely.</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">🔄</div>
+      <div class="text">Take turns over time<span>I'll get the next one</span></div>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="nextScreen()">Next</button>
+</div>
+
+<!-- SCREEN 7: Quiz Q3 -->
+<div class="screen" id="s7">
+  <h2>Your partner makes 3x your salary...</h2>
+  <p class="subtitle">Question 3 of 5</p>
+  <div class="quiz-options">
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">🔥</div>
+      <div class="text">Motivating! I'd level up<span>Competition drives me</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">😌</div>
+      <div class="text">Doesn't matter to me<span>Money isn't how I measure worth</span></div>
+    </div>
+    <div class="quiz-option selected" onclick="selectQuiz(this)">
+      <div class="emoji">🤔</div>
+      <div class="text">We'd need to talk about it<span>Power dynamics are real</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">😬</div>
+      <div class="text">Honestly? A little intimidating<span>I'd feel weird about it</span></div>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="nextScreen()">Next</button>
+</div>
+
+<!-- SCREEN 8: Quiz Q4 -->
+<div class="screen" id="s8">
+  <h2>Saturday morning, you're most likely...</h2>
+  <p class="subtitle">Question 4 of 5</p>
+  <div class="quiz-options">
+    <div class="quiz-option selected" onclick="selectQuiz(this)">
+      <div class="emoji">🏃</div>
+      <div class="text">At the gym or on a run<span>Body and mind, always</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">💻</div>
+      <div class="text">Working on a side project<span>Weekends are for building</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">🛋️</div>
+      <div class="text">Recovering from last night<span>Work hard, play hard</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">🌿</div>
+      <div class="text">Farmers market & coffee<span>Slow mornings are sacred</span></div>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="nextScreen()">Next</button>
+</div>
+
+<!-- SCREEN 9: Quiz Q5 -->
+<div class="screen" id="s9">
+  <h2>Biggest financial flex?</h2>
+  <p class="subtitle">Question 5 of 5</p>
+  <div class="quiz-options">
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">🏠</div>
+      <div class="text">Bought my own place<span>Real estate = real wealth</span></div>
+    </div>
+    <div class="quiz-option selected" onclick="selectQuiz(this)">
+      <div class="emoji">🚀</div>
+      <div class="text">Built (or invested in) a company<span>Equity over salary</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">✈️</div>
+      <div class="text">Travel whenever I want<span>Freedom is the ultimate flex</span></div>
+    </div>
+    <div class="quiz-option" onclick="selectQuiz(this)">
+      <div class="emoji">📊</div>
+      <div class="text">My portfolio speaks for itself<span>Compound interest is magic</span></div>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="nextScreen()">See my results</button>
+</div>
+
+<!-- SCREEN 10: Result Card ✨ -->
+<div class="screen" id="s10">
+  <div style="text-align:center;margin-bottom:8px;">
+    <p style="font-size:13px;color:#666;text-transform:uppercase;letter-spacing:2px;">Your Archetype</p>
+  </div>
+  <div class="result-card">
+    <div class="archetype-emoji">⚡</div>
+    <div class="archetype-name">The Visionary Builder</div>
+    <div class="archetype-desc">You see money as fuel for creation, not a scoreboard. You'd rather invest in people and ideas than hoard safety. Risk doesn't scare you — mediocrity does.</div>
+    <div class="traits">
+      <div class="trait"><div class="val">92</div><div class="lbl">Ambition</div></div>
+      <div class="trait"><div class="val">78</div><div class="lbl">Risk</div></div>
+      <div class="trait"><div class="val">85</div><div class="lbl">Generosity</div></div>
+      <div class="trait"><div class="val">64</div><div class="lbl">Security</div></div>
+    </div>
+  </div>
+  <div style="text-align:center;">
+    <button class="btn-share" onclick="alert('Share sheet would open here')">📤 Share your archetype</button>
+  </div>
+  <p style="text-align:center;font-size:13px;color:#444;margin-top:12px;">4,203 members share your archetype</p>
+  <div class="spacer"></div>
+  <button class="btn-primary" onclick="nextScreen()">Continue to my profile</button>
+</div>
+
+<!-- SCREEN 11: Data Connections -->
+<div class="screen" id="s11">
+  <h1>Power up your profile</h1>
+  <p class="subtitle">Connect your data for deeper insights and better matches. Each unlock reveals more about your compatibility.</p>
+  
+  <div class="completion-ring">
+    <svg viewBox="0 0 120 120">
+      <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#c8a2f8"/><stop offset="100%" style="stop-color:#f8a2c8"/></linearGradient></defs>
+      <circle class="bg" cx="60" cy="60" r="54"/>
+      <circle class="fill" cx="60" cy="60" r="54" style="stroke-dashoffset: 237;"/>
+    </svg>
+    <div class="pct">30%</div>
+  </div>
+  
+  <div class="integration-cards">
+    <div class="int-card" onclick="connectCard(this, 'plaid')">
+      <div class="icon plaid">🏦</div>
+      <div class="info">
+        <h3>Financial Profile</h3>
+        <p>Spending habits, saving patterns, financial health</p>
+      </div>
+      <div class="arrow">→</div>
+    </div>
+    <div class="int-card" onclick="connectCard(this, 'oura')">
+      <div class="icon oura">💍</div>
+      <div class="info">
+        <h3>Oura Ring</h3>
+        <p>Sleep quality, readiness, stress recovery</p>
+      </div>
+      <div class="arrow">→</div>
+    </div>
+    <div class="int-card" onclick="connectCard(this, 'whoop')">
+      <div class="icon whoop">💪</div>
+      <div class="info">
+        <h3>WHOOP</h3>
+        <p>Strain, recovery, HRV, sleep performance</p>
+      </div>
+      <div class="arrow">→</div>
+    </div>
+    <div class="int-card" onclick="connectCard(this, 'apple')">
+      <div class="icon apple">⌚</div>
+      <div class="info">
+        <h3>Apple Health</h3>
+        <p>Activity, workouts, heart rate, mindfulness</p>
+      </div>
+      <div class="arrow">→</div>
+    </div>
+  </div>
+  
+  <div class="lock-note">🔒 Your data is encrypted and never shared with other members</div>
+  <div class="spacer"></div>
+  <button class="btn-primary" onclick="nextScreen()">Continue</button>
+  <button class="btn-skip" onclick="nextScreen()">I'll do this later</button>
+</div>
+
+<!-- SCREEN 12: Connected Dashboard -->
+<div class="screen" id="s12">
+  <h1>You're in, Amanda ✨</h1>
+  <p class="subtitle">Your profile is live. Here's what we know so far.</p>
+  
+  <div style="background:#1a1a1a;border-radius:16px;padding:20px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="font-size:15px;font-weight:600;">Your Compatibility Signals</span>
+      <span style="font-size:13px;color:#c8a2f8;">30% unlocked</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <div style="flex:1;background:#1a1528;border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:24px;margin-bottom:4px;">⚡</div>
+        <div style="font-size:11px;color:#888;">Money<br>Archetype</div>
+      </div>
+      <div style="flex:1;background:#111;border-radius:10px;padding:14px;text-align:center;opacity:0.4;">
+        <div style="font-size:24px;margin-bottom:4px;">🔒</div>
+        <div style="font-size:11px;color:#555;">Financial<br>Health</div>
+      </div>
+      <div style="flex:1;background:#111;border-radius:10px;padding:14px;text-align:center;opacity:0.4;">
+        <div style="font-size:24px;margin-bottom:4px;">🔒</div>
+        <div style="font-size:11px;color:#555;">Sleep<br>Score</div>
+      </div>
+      <div style="flex:1;background:#111;border-radius:10px;padding:14px;text-align:center;opacity:0.4;">
+        <div style="font-size:24px;margin-bottom:4px;">🔒</div>
+        <div style="font-size:11px;color:#555;">Wellness<br>Score</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:#444;text-align:center;">Connect more data sources to unlock all signals</p>
+  </div>
+  
+  <div style="background:#1a1a1a;border-radius:16px;padding:20px;margin-bottom:16px;">
+    <div style="font-size:15px;font-weight:600;margin-bottom:12px;">People like you</div>
+    <div style="display:flex;gap:-8px;margin-bottom:12px;">
+      <div style="width:40px;height:40px;border-radius:50%;background:#2a2040;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid #0a0a0a;">S</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#1a2a3a;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid #0a0a0a;margin-left:-8px;">M</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#2a1a2a;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid #0a0a0a;margin-left:-8px;">J</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#1a2a1a;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid #0a0a0a;margin-left:-8px;">A</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-size:12px;color:#888;border:2px solid #0a0a0a;margin-left:-8px;">+47</div>
+    </div>
+    <p style="font-size:13px;color:#666;">51 Visionary Builders in Austin are waiting to connect</p>
+  </div>
+  
+  <div class="spacer"></div>
+  <button class="btn-primary" onclick="alert('🎉 This is the end of the mock! Tap back to review any screen.')">Explore the community</button>
+</div>
+
+<script>
+const screens = document.querySelectorAll('.screen');
+const totalScreens = screens.length;
+let current = 0;
+
+function updateUI() {
+  screens.forEach((s, i) => s.classList.toggle('active', i === current));
+  document.getElementById('progressFill').style.width = ((current + 1) / totalScreens * 100) + '%';
+  document.getElementById('stepCount').textContent = (current + 1) + ' / ' + totalScreens;
+  document.getElementById('backBtn').style.display = current === 0 ? 'none' : 'block';
+}
+
+function nextScreen() {
+  if (current < totalScreens - 1) { current++; updateUI(); window.scrollTo(0, 0); }
+}
+
+function prevScreen() {
+  if (current > 0) { current--; updateUI(); window.scrollTo(0, 0); }
+}
+
+function selectQuiz(el) {
+  el.parentElement.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function connectCard(el, type) {
+  if (el.classList.contains('connected')) return;
+  el.classList.add('connected');
+  el.querySelector('.arrow').textContent = '✓';
+  el.querySelector('.arrow').style.color = '#4ade80';
+  // Update completion ring
+  const connected = document.querySelectorAll('.int-card.connected').length;
+  const pct = 30 + (connected * 17.5);
+  document.querySelector('.completion-ring .pct').textContent = Math.round(pct) + '%';
+  const circumference = 339.292;
+  document.querySelector('.completion-ring .fill').style.strokeDashoffset = circumference * (1 - pct/100);
+}
+
+updateUI();
+</script>
+</body>
+</html>
